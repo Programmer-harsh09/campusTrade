@@ -38,6 +38,9 @@ app.add_middleware(
 # ── Register Routers ───────────────────────────────────────────
 app.include_router(health_router)
 
+from app.api.routers.auth import router as auth_router
+app.include_router(auth_router)
+
 # ── Root Endpoint ──────────────────────────────────────────────
 
 @app.get("/", tags=["Root"])
