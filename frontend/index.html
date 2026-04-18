@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CampusTrade — Student Marketplace</title>
+  <meta name="description" content="Buy, sell, and trade textbooks, electronics, and more with fellow students on CampusTrade." />
+
+  <!-- Tailwind CSS v3 via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          colors: {
+            brand: {
+              50:  '#eef7ff',
+              100: '#d9edff',
+              200: '#bce0ff',
+              300: '#8ecdff',
+              400: '#59b0ff',
+              500: '#3b8eff',
+              600: '#1e6bf5',
+              700: '#1755e1',
+              800: '#1946b6',
+              900: '#1b3d8f',
+              950: '#152757',
+            },
+            surface: {
+              50:  '#f8fafc',
+              100: '#f1f5f9',
+              200: '#e2e8f0',
+              300: '#cbd5e1',
+              400: '#94a3b8',
+              500: '#64748b',
+              600: '#475569',
+              700: '#334155',
+              800: '#1e293b',
+              900: '#0f172a',
+              950: '#020617',
+            }
+          },
+          animation: {
+            'fade-in':      'fadeIn .4s ease-out',
+            'slide-up':     'slideUp .45s ease-out',
+            'slide-down':   'slideDown .35s ease-out',
+            'scale-in':     'scaleIn .3s ease-out',
+            'pulse-slow':   'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'shimmer':      'shimmer 2s infinite linear',
+          },
+          keyframes: {
+            fadeIn:    { from: { opacity: 0 }, to: { opacity: 1 } },
+            slideUp:   { from: { opacity: 0, transform: 'translateY(24px)' }, to: { opacity: 1, transform: 'translateY(0)' } },
+            slideDown: { from: { opacity: 0, transform: 'translateY(-12px)' }, to: { opacity: 1, transform: 'translateY(0)' } },
+            scaleIn:   { from: { opacity: 0, transform: 'scale(0.95)' }, to: { opacity: 1, transform: 'scale(1)' } },
+            shimmer:   { '0%': { backgroundPosition: '-200% 0' }, '100%': { backgroundPosition: '200% 0' } },
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Font — Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Global ────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Inter', system-ui, sans-serif; }
+
+    /* ── Glass card ────────────────────────────── */
+    .glass {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+    }
+    .glass-dark {
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(18px) saturate(200%);
+      -webkit-backdrop-filter: blur(18px) saturate(200%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    /* ── View transitions ─────────────────────── */
+    .view { display: none; }
+    .view.active { display: block; animation: fadeIn .4s ease-out; }
+
+    /* ── Gradient mesh background ──────────────── */
+    .mesh-bg {
+      background-color: #0f172a;
+      background-image:
+        radial-gradient(at 20% 25%, rgba(59,142,255,.25) 0, transparent 50%),
+        radial-gradient(at 80% 75%, rgba(139,92,246,.2)  0, transparent 50%),
+        radial-gradient(at 50% 50%, rgba(14,165,233,.15) 0, transparent 60%);
+    }
+
+    /* ── Skeleton shimmer ─────────────────────── */
+    .skeleton {
+      background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+      background-size: 200% 100%;
+      animation: shimmer 2s infinite linear;
+      border-radius: 0.5rem;
+    }
+
+    /* ── Scrollbar styling ────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 999px; }
+
+    /* ── Toast ─────────────────────────────────── */
+    #toast-container { position: fixed; top: 1.25rem; right: 1.25rem; z-index: 9999; display: flex; flex-direction: column; gap: .5rem; }
+    .toast-msg {
+      padding: .75rem 1.25rem;
+      border-radius: .75rem;
+      color: #fff;
+      font-size: .875rem;
+      font-weight: 500;
+      animation: slideDown .35s ease-out;
+      box-shadow: 0 8px 32px rgba(0,0,0,.35);
+    }
+    .toast-success { background: linear-gradient(135deg, #059669, #10b981); }
+    .toast-error   { background: linear-gradient(135deg, #dc2626, #ef4444); }
+    .toast-info    { background: linear-gradient(135deg, #2563eb, #3b82f6); }
+
+    /* ── Input focus ring ─────────────────────── */
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(59,142,255,.35);
+      border-color: #3b8eff;
+    }
+
+    /* ── Card hover ────────────────────────────── */
+    .card-hover {
+      transition: transform .25s, box-shadow .25s;
+    }
+    .card-hover:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,.3);
+    }
+
+    /* ── Badge pulse ───────────────────────────── */
+    .urgency-high { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+  </style>
+</head>
+
+<body class="mesh-bg text-white min-h-screen antialiased">
+
+  <!-- ═══════════════════════════════════════════
+       TOAST CONTAINER
+       ═══════════════════════════════════════════ -->
+  <div id="toast-container"></div>
+
+  <!-- ═══════════════════════════════════════════
+       NAVBAR
+       ═══════════════════════════════════════════ -->
+  <nav id="navbar" class="sticky top-0 z-50 glass-dark border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Logo -->
+        <button onclick="navigate('dashboard')" class="flex items-center gap-2 group" id="nav-logo">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-purple-500 flex items-center justify-center shadow-lg shadow-brand-500/25 group-hover:shadow-brand-500/40 transition-shadow">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          <span class="text-lg font-bold bg-gradient-to-r from-brand-400 to-purple-400 bg-clip-text text-transparent">CampusTrade</span>
+        </button>
+
+        <!-- Nav Links (shown when logged in) -->
+        <div id="nav-links" class="hidden items-center gap-1">
+          <button onclick="navigate('dashboard')" data-nav="dashboard"
+                  class="nav-btn px-4 py-2 rounded-xl text-sm font-medium text-surface-300 hover:text-white hover:bg-white/5 transition-colors">
+            <span class="flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+              Listings
+            </span>
+          </button>
+          <button onclick="navigate('asks')" data-nav="asks"
+                  class="nav-btn px-4 py-2 rounded-xl text-sm font-medium text-surface-300 hover:text-white hover:bg-white/5 transition-colors">
+            <span class="flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Requests
+            </span>
+          </button>
+          <button onclick="navigate('create-listing')" data-nav="create-listing"
+                  class="nav-btn px-4 py-2 rounded-xl text-sm font-medium text-surface-300 hover:text-white hover:bg-white/5 transition-colors">
+            <span class="flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              Sell
+            </span>
+          </button>
+          <button onclick="navigate('create-ask')" data-nav="create-ask"
+                  class="nav-btn px-4 py-2 rounded-xl text-sm font-medium text-surface-300 hover:text-white hover:bg-white/5 transition-colors">
+            <span class="flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"/></svg>
+              Request
+            </span>
+          </button>
+        </div>
+
+        <!-- Right side -->
+        <div class="flex items-center gap-3">
+          <span id="nav-user-email" class="hidden text-xs text-surface-400 bg-white/5 px-3 py-1.5 rounded-full"></span>
+          <button id="nav-logout-btn" onclick="logout()" class="hidden px-4 py-2 rounded-xl text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors">
+            Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════
+       MAIN CONTENT AREA
+       ═══════════════════════════════════════════ -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- ─── AUTH VIEW ──────────────────────────── -->
+    <section id="view-auth" class="view">
+      <div class="min-h-[calc(100vh-8rem)] flex items-center justify-center">
+        <div class="w-full max-w-md animate-scale-in">
+          <!-- Auth hero -->
+          <div class="text-center mb-8">
+            <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-brand-500 to-purple-500 flex items-center justify-center shadow-xl shadow-brand-500/25 mb-4">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </div>
+            <h1 class="text-3xl font-extrabold bg-gradient-to-r from-white via-brand-200 to-purple-300 bg-clip-text text-transparent">CampusTrade</h1>
+            <p class="text-surface-400 mt-1 text-sm">Your campus marketplace, reimagined.</p>
+          </div>
+
+          <!-- Tab toggle -->
+          <div class="flex rounded-2xl bg-surface-800/70 p-1 mb-6 border border-white/5">
+            <button id="tab-login" onclick="switchAuthTab('login')" class="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all">Login</button>
+            <button id="tab-signup" onclick="switchAuthTab('signup')" class="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all">Sign Up</button>
+          </div>
+
+          <!-- Login Form -->
+          <form id="form-login" onsubmit="handleLogin(event)" class="glass-dark rounded-2xl p-6 space-y-5 border border-white/5 shadow-2xl">
+            <div>
+              <label for="login-email" class="block text-xs font-semibold text-surface-300 mb-1.5 uppercase tracking-wider">Email</label>
+              <input id="login-email" type="email" required placeholder="you@university.edu"
+                     class="w-full px-4 py-3 rounded-xl bg-surface-800/80 border border-white/10 text-white placeholder-surface-500 text-sm transition-all" />
+            </div>
+            <div>
+              <label for="login-password" class="block text-xs font-semibold text-surface-300 mb-1.5 uppercase tracking-wider">Password</label>
+              <input id="login-password" type="password" required placeholder="••••••••"
+                     class="w-full px-4 py-3 rounded-xl bg-surface-800/80 border border-white/10 text-white placeholder-surface-500 text-sm transition-all" />
+            </div>
+            <button type="submit" id="login-submit-btn"
+                    class="w-full py-3 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 text-white font-semibold text-sm shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
+              Sign In
+            </button>
+          </form>
+
+          <!-- Signup Form -->
+          <form id="form-signup" onsubmit="handleSignup(event)" class="glass-dark rounded-2xl p-6 space-y-5 border border-white/5 shadow-2xl hidden">
+            <div>
+              <label for="signup-name" class="block text-xs font-semibold text-surface-300 mb-1.5 uppercase tracking-wider">Full Name</label>
+              <input id="signup-name" type="text" placeholder="Jane Doe"
+                     class="w-full px-4 py-3 rounded-xl bg-surface-800/80 border border-white/10 text-white placeholder-surface-500 text-sm transition-all" />
+            </div>
+            <div>
+              <label for="signup-email" class="block text-xs font-semibold text-surface-300 mb-1.5 uppercase tracking-wider">Email</label>
+              <input id="signup-email" type="email" required placeholder="you@university.edu"
+                     class="w-full px-4 py-3 rounded-xl bg-surface-800/80 border border-white/10 text-white placeholder-surface-500 text-sm transition-all" />
+            </div>
+            <div>
+              <label for="signup-password" class="block text-xs font-semibold text-surface-300 mb-1.5 uppercase tracking-wider">Password</label>
+              <input id="signup-password" type="password" required minlength="8" placeholder="Min. 8 characters"
+                     class="w-full px-4 py-3 rounded-xl bg-surface-800/80 border border-white/10 text-white placeholder-surface-500 text-sm transition-all" />
+            </div>
+            <button type="submit" id="signup-submit-btn"
+                    class="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-brand-500 hover:from-purple-500 hover:to-brand-400 text-white font-semibold text-sm shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
+              Create Account
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── DASHBOARD / LISTINGS VIEW ──────────── -->
+    <section id="view-dashboard" class="view">
+      <div class="animate-slide-up">
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 class="text-2xl font-bold text-white">Marketplace</h1>
+            <p class="text-surface-400 text-sm mt-1">Discover items from students on your campus</p>
+          </div>
+          <div class="flex items-center gap-3 w-full sm:w-auto">
+            <div class="relative flex-1 sm:flex-none">
+              <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              <input id="listing-search" type="text" placeholder="Search listings..."
+                     oninput="debounce(loadListings, 400)()"
+                     class="w-full sm:w-64 pl-10 pr-4 py-2.5 rounded-xl bg-surface-800/80 border border-white/10 text-white placeholder-surface-500 text-sm transition-all" />
+            </div>
+            <button onclick="navigate('create-listing')"
+                    class="hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 text-white font-medium text-sm shadow-lg shadow-brand-500/20 transition-all active:scale-[0.98]">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              Sell Item
+            </button>
+          </div>
+        </div>
+
+        <!-- Listing Grid -->
+        <div id="listings-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <!-- Cards populated by JS -->
+        </div>
+
+        <!-- Empty state -->
+        <div id="listings-empty" class="hidden text-center py-20">
+          <div class="w-20 h-20 mx-auto rounded-2xl bg-surface-800/60 flex items-center justify-center mb-5">
+            <svg class="w-10 h-10 text-surface-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold text-surface-300">No listings yet</h3>
+          <p class="text-surface-500 text-sm mt-1">Be the first to sell something on campus!</p>
+          <button onclick="navigate('create-listing')"
+                  class="mt-5 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium transition-all">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Create First Listing
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── ASKS (REQUESTS) VIEW ───────────────── -->
+    <section id="view-asks" class="view">
+      <div class="animate-slide-up">
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 class="text-2xl font-bold text-white">Buy Requests</h1>
+            <p class="text-surface-400 text-sm mt-1">See what students are looking for</p>
+          </div>
+          <div class="flex items-center gap-3 w-full sm:w-auto">
+            <div class="relative flex-1 sm:flex-none">
+              <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              <input id="ask-search" type="text" placeholder="Search requests..."
+                     oninput="debounce(loadAsks, 400)()"
+                     class="w-full sm:w-64 pl-10 pr-4 py-2.5 rounded-xl bg-surface-800/80 border border-white/10 text-white placeholder-surface-500 text-sm transition-all" />
+            </div>
+            <button onclick="navigate('create-ask')"
+                    class="hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-brand-500 hover:from-purple-500 hover:to-brand-400 text-white font-medium text-sm shadow-lg shadow-purple-500/20 transition-all active:scale-[0.98]">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"/></svg>
+              Post Request
+            </button>
+          </div>
+        </div>
+
+        <!-- Asks Grid -->
+        <div id="asks-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <!-- Cards populated by JS -->
+        </div>
+
+        <!-- Empty state -->
+        <div id="asks-empty" class="hidden text-center py-20">
+          <div class="w-20 h-20 mx-auto rounded-2xl bg-surface-800/60 flex items-center justify-center mb-5">
+            <svg class="w-10 h-10 text-surface-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold text-surface-300">No requests yet</h3>
+          <p class="text-surface-500 text-sm mt-1">Need something? Post a buy request!</p>
+          <button onclick="navigate('create-ask')"
+                  class="mt-5 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium transition-all">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"/></svg>
+            Post First Request
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── CREATE LISTING VIEW ────────────────── -->
+    <section id="view-create-listing" class="view">
+      <div class="max-w-2xl mx-auto animate-slide-up">
+        <button onclick="navigate('dashboard')" class="flex items-center gap-2 text-surface-400 hover:text-white text-sm mb-6 transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          Back to Listings
+        </button>
+
+        <div class="glass-dark rounded-2xl p-8 border border-white/5 shadow-2xl">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-cyan-500 flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            </div>
+            <div>
+              <h2 class="text-xl font-bold">Sell an Item</h2>
+              <p class="text-surface-400 text-xs">Fill in the details below to create a listing</p>
+            </div>
+          </div>
+
+          <form id="form-create-listing" onsubmit="handleCreateListing(event)" class="space-y-5">
+            <div>
+              <label for="cl-title" class="block text-xs font-semibold text-surface-300 mb-1.5 uppercase tracking-wider">Title *</label>
+              <input id="cl-title" type="text" required minlength="3" maxlength="200" placeholder="e.g. Calculus Textbook, 3rd Edition"
+                     class="w-full px-4 py-3 rounded-xl bg-surface-800/80 border border-white/10 text-white placeholder-surface-500 text-sm transition-all" />
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="cl-price" class="block text-xs font-semibold text-surface-300 mb-1.5 uppercase tracking-wider">Price (₹) *</label>
+                <input id="cl-price" type="number" required min="1" step="0.01" placeholder="499"
+                       class="w-full px-4 py-3 rounded-xl bg-surface-800/80 border border-white/10 text-white placeholder-surface-500 text-sm transition-all" />
+              </div>
+              <div>
+                <label for="cl-condition" class="block text-xs font-semibold text-surface-300 mb-1.5 uppercase tracking-wider">Condition</label>
+                <select id="cl-condition"
+                        class="w-full px-4 py-3 rounded-xl bg-surface-800/80 border border-white/10 text-white text-sm transition-all appearance-none cursor-pointer">
+                  <option value="new">New</option>
+                  <option value="like_new">Like New</option>
+                  <option value="good" selected>Good</option>
+                  <option value="fair">Fair</option>
+                  <option value="poor">Poor</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label for="cl-category" class="block text-xs font-semibold text-surface-300 mb-1.5 uppercase tracking-wider">Category *</label>
+              <select id="cl-category" required
+                      class="w-full px-4 py-3 rounded-xl bg-surface-800/80 border border-white/10 text-white text-sm transition-all appearance-none cursor-pointer">
+                <option value="">Select a category...</option>
+                <!-- Dynamically populated -->
+              </select>
+            </div>
+
+            <div>
+              <label for="cl-description" class="block text-xs font-semibold text-surface-300 mb-1.5 uppercase tracking-wider">Description</label>
+              <textarea id="cl-description" rows="4" maxlength="5000" placeholder="Describe your item — condition details, reason for selling, etc."
+                        class="w-full px-4 py-3 rounded-xl bg-surface-800/80 border border-white/10 text-white placeholder-surface-500 text-sm resize-none transition-all"></textarea>
+            </div>
+
+            <button type="submit" id="cl-submit-btn"
+                    class="w-full py-3 rounded-xl bg-gradient-to-r from-brand-600 to-cyan-500 hover:from-brand-500 hover:to-cyan-400 text-white font-semibold text-sm shadow-lg shadow-brand-500/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
+              Publish Listing
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── CREATE ASK VIEW ────────────────────── -->
+    <section id="view-create-ask" class="view">
+      <div class="max-w-2xl mx-auto animate-slide-up">
+        <button onclick="navigate('asks')" class="flex items-center gap-2 text-surface-400 hover:text-white text-sm mb-6 transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          Back to Requests
+        </button>
+
+        <div class="glass-dark rounded-2xl p-8 border border-white/5 shadow-2xl">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"/></svg>
+            </div>
+            <div>
+              <h2 class="text-xl font-bold">Post a Request</h2>
+              <p class="text-surface-400 text-xs">Tell other students what you're looking for</p>
+            </div>
+          </div>
+
+          <form id="form-create-ask" onsubmit="handleCreateAsk(event)" class="space-y-5">
+            <div>
+              <label for="ca-title" class="block text-xs font-semibold text-surface-300 mb-1.5 uppercase tracking-wider">What are you looking for? *</label>
+              <input id="ca-title" type="text" required minlength="3" maxlength="200" placeholder="e.g. Data Structures textbook for CS201"
+                     class="w-full px-4 py-3 rounded-xl bg-surface-800/80 border border-white/10 text-white placeholder-surface-500 text-sm transition-all" />
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="ca-budget" class="block text-xs font-semibold text-surface-300 mb-1.5 uppercase tracking-wider">Max Budget (₹)</label>
+                <input id="ca-budget" type="number" min="0" step="0.01" placeholder="Optional"
+                       class="w-full px-4 py-3 rounded-xl bg-surface-800/80 border border-white/10 text-white placeholder-surface-500 text-sm transition-all" />
+              </div>
+              <div>
+                <label for="ca-urgency" class="block text-xs font-semibold text-surface-300 mb-1.5 uppercase tracking-wider">Urgency</label>
+                <select id="ca-urgency"
+                        class="w-full px-4 py-3 rounded-xl bg-surface-800/80 border border-white/10 text-white text-sm transition-all appearance-none cursor-pointer">
+                  <option value="low">Low</option>
+                  <option value="medium" selected>Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label for="ca-category" class="block text-xs font-semibold text-surface-300 mb-1.5 uppercase tracking-wider">Category *</label>
+              <select id="ca-category" required
+                      class="w-full px-4 py-3 rounded-xl bg-surface-800/80 border border-white/10 text-white text-sm transition-all appearance-none cursor-pointer">
+                <option value="">Select a category...</option>
+                <!-- Dynamically populated -->
+              </select>
+            </div>
+
+            <div>
+              <label for="ca-description" class="block text-xs font-semibold text-surface-300 mb-1.5 uppercase tracking-wider">Description</label>
+              <textarea id="ca-description" rows="4" maxlength="3000" placeholder="Any extra details — preferred condition, edition, brand, etc."
+                        class="w-full px-4 py-3 rounded-xl bg-surface-800/80 border border-white/10 text-white placeholder-surface-500 text-sm resize-none transition-all"></textarea>
+            </div>
+
+            <button type="submit" id="ca-submit-btn"
+                    class="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-500 hover:to-pink-400 text-white font-semibold text-sm shadow-lg shadow-purple-500/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
+              Publish Request
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ═══════════════════════════════════════════
+       FOOTER
+       ═══════════════════════════════════════════ -->
+  <footer class="border-t border-white/5 mt-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex items-center justify-between">
+      <p class="text-surface-500 text-xs">&copy; 2026 CampusTrade. Built for students, by students.</p>
+      <a href="/docs" target="_blank" class="text-surface-500 hover:text-brand-400 text-xs transition-colors">API Docs →</a>
+    </div>
+  </footer>
+
+
+  <!-- ═══════════════════════════════════════════
+       JAVASCRIPT — App Logic
+       ═══════════════════════════════════════════ -->
+  <script>
+  (() => {
+    'use strict';
+
+    // ── Config ──────────────────────────────────────────────
+    const API = 'http://localhost:8000';
+
+    // ── State ───────────────────────────────────────────────
+    let currentView = 'auth';
+    let categories  = [];
+
+    // ── Helpers ─────────────────────────────────────────────
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => document.querySelectorAll(sel);
+
+    function getToken()   { return localStorage.getItem('ct_access_token'); }
+    function getEmail()   { return localStorage.getItem('ct_user_email'); }
+    function setAuth(token, email) {
+      localStorage.setItem('ct_access_token', token);
+      localStorage.setItem('ct_user_email', email);
+    }
+    function clearAuth() {
+      localStorage.removeItem('ct_access_token');
+      localStorage.removeItem('ct_user_email');
+    }
+
+    function authHeaders() {
+      const token = getToken();
+      return token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+                   : { 'Content-Type': 'application/json' };
+    }
+
+    // ── Toast ───────────────────────────────────────────────
+    window.toast = function(msg, type = 'info') {
+      const c = $('#toast-container');
+      const el = document.createElement('div');
+      el.className = `toast-msg toast-${type}`;
+      el.textContent = msg;
+      c.appendChild(el);
+      setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(() => el.remove(), 300); }, 3500);
+    };
+
+    // ── Debounce ────────────────────────────────────────────
+    const _debounceTimers = {};
+    window.debounce = function(fn, ms) {
+      return function() {
+        clearTimeout(_debounceTimers[fn.name]);
+        _debounceTimers[fn.name] = setTimeout(fn, ms);
+      };
+    };
+
+    // ── Navigation ──────────────────────────────────────────
+    window.navigate = function(view) {
+      // Guard: auth-only views
+      if (view !== 'auth' && !getToken()) {
+        toast('Please sign in first', 'error');
+        view = 'auth';
+      }
+
+      currentView = view;
+
+      // Toggle view sections
+      $$('.view').forEach(v => v.classList.remove('active'));
+      const target = $(`#view-${view}`);
+      if (target) target.classList.add('active');
+
+      // Update nav highlights
+      $$('.nav-btn').forEach(btn => {
+        const isActive = btn.getAttribute('data-nav') === view;
+        btn.classList.toggle('bg-white/10', isActive);
+        btn.classList.toggle('text-white', isActive);
+      });
+
+      // Load data for views
+      if (view === 'dashboard') loadListings();
+      if (view === 'asks')      loadAsks();
+      if (view === 'create-listing' || view === 'create-ask') loadCategories();
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // ── UI state for logged-in / logged-out ─────────────────
+    function updateNavState() {
+      const loggedIn = !!getToken();
+      $('#nav-links').classList.toggle('hidden', !loggedIn);
+      $('#nav-links').classList.toggle('flex', loggedIn);
+      $('#nav-logout-btn').classList.toggle('hidden', !loggedIn);
+      const emailEl = $('#nav-user-email');
+      if (loggedIn) {
+        emailEl.classList.remove('hidden');
+        emailEl.textContent = getEmail() || 'User';
+      } else {
+        emailEl.classList.add('hidden');
+      }
+    }
+
+    // ── Auth Tab Toggle ─────────────────────────────────────
+    window.switchAuthTab = function(tab) {
+      const isLogin = tab === 'login';
+      $('#form-login').classList.toggle('hidden', !isLogin);
+      $('#form-signup').classList.toggle('hidden', isLogin);
+      $('#tab-login').classList.toggle('bg-brand-600', isLogin);
+      $('#tab-login').classList.toggle('text-white', isLogin);
+      $('#tab-login').classList.toggle('shadow-lg', isLogin);
+      $('#tab-login').classList.toggle('text-surface-400', !isLogin);
+      $('#tab-signup').classList.toggle('bg-purple-600', !isLogin);
+      $('#tab-signup').classList.toggle('text-white', !isLogin);
+      $('#tab-signup').classList.toggle('shadow-lg', !isLogin);
+      $('#tab-signup').classList.toggle('text-surface-400', isLogin);
+    };
+
+    // ── Login ───────────────────────────────────────────────
+    window.handleLogin = async function(e) {
+      e.preventDefault();
+      const btn = $('#login-submit-btn');
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+
+      try {
+        const res = await fetch(`${API}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email:    $('#login-email').value.trim(),
+            password: $('#login-password').value,
+          }),
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || `Login failed (${res.status})`);
+        }
+
+        const data = await res.json();
+        setAuth(data.access_token, $('#login-email').value.trim());
+        updateNavState();
+        toast('Welcome back!', 'success');
+        navigate('dashboard');
+        // Reset form
+        $('#form-login').reset();
+      } catch (err) {
+        toast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+      }
+    };
+
+    // ── Sign Up ─────────────────────────────────────────────
+    window.handleSignup = async function(e) {
+      e.preventDefault();
+      const btn = $('#signup-submit-btn');
+      btn.disabled = true;
+      btn.textContent = 'Creating account...';
+
+      const body = {
+        email:    $('#signup-email').value.trim(),
+        password: $('#signup-password').value,
+      };
+      const name = $('#signup-name').value.trim();
+      if (name) body.full_name = name;
+
+      try {
+        const res = await fetch(`${API}/auth/signup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || `Signup failed (${res.status})`);
+        }
+
+        const data = await res.json();
+        toast(data.message || 'Account created! Please check your email.', 'success');
+        switchAuthTab('login');
+        // Pre-fill login email
+        $('#login-email').value = $('#signup-email').value;
+        $('#form-signup').reset();
+      } catch (err) {
+        toast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Create Account';
+      }
+    };
+
+    // ── Logout ──────────────────────────────────────────────
+    window.logout = function() {
+      clearAuth();
+      updateNavState();
+      toast('Signed out', 'info');
+      navigate('auth');
+    };
+
+    // ── Load Categories (for forms) ─────────────────────────
+    async function loadCategories() {
+      if (categories.length > 0) return populateCategoryDropdowns();
+      try {
+        const res = await fetch(`${API}/categories`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.length) {
+            categories = data;
+            populateCategoryDropdowns();
+            return;
+          }
+        }
+      } catch (_) { /* endpoint unavailable, use fallback */ }
+
+      // Fallback: hardcoded from seed SQL (no real UUIDs — create forms won't work without the endpoint)
+      console.warn('Using hardcoded categories — /categories endpoint unavailable');
+      categories = [
+        { id: '00000000-0000-0000-0000-000000000001', name: 'Textbooks',   slug: 'textbooks' },
+        { id: '00000000-0000-0000-0000-000000000002', name: 'Electronics', slug: 'electronics' },
+        { id: '00000000-0000-0000-0000-000000000003', name: 'Furniture',   slug: 'furniture' },
+        { id: '00000000-0000-0000-0000-000000000004', name: 'Clothing',    slug: 'clothing' },
+        { id: '00000000-0000-0000-0000-000000000005', name: 'Tickets',     slug: 'tickets' },
+        { id: '00000000-0000-0000-0000-000000000006', name: 'Services',    slug: 'services' },
+        { id: '00000000-0000-0000-0000-000000000007', name: 'Other',       slug: 'other' },
+      ];
+      populateCategoryDropdowns();
+    }
+
+    function populateCategoryDropdowns() {
+      ['cl-category', 'ca-category'].forEach(id => {
+        const sel = $(`#${id}`);
+        // Keep the first <option> placeholder
+        sel.innerHTML = '<option value="">Select a category...</option>';
+        categories.forEach(cat => {
+          const opt = document.createElement('option');
+          opt.value = cat.id || cat.slug;
+          opt.textContent = cat.name;
+          sel.appendChild(opt);
+        });
+      });
+    }
+
+    // ── Load Listings ───────────────────────────────────────
+    window.loadListings = async function() {
+      const grid = $('#listings-grid');
+      const empty = $('#listings-empty');
+      const search = $('#listing-search').value.trim();
+
+      // Show skeletons
+      grid.innerHTML = Array(8).fill('').map(() => `
+        <div class="rounded-2xl overflow-hidden bg-surface-800/60 border border-white/5">
+          <div class="h-44 skeleton"></div>
+          <div class="p-4 space-y-3">
+            <div class="h-4 w-3/4 skeleton"></div>
+            <div class="h-3 w-1/2 skeleton"></div>
+            <div class="h-6 w-1/3 skeleton"></div>
+          </div>
+        </div>
+      `).join('');
+      empty.classList.add('hidden');
+
+      try {
+        let url = `${API}/listings?status=active&limit=40&offset=0`;
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const listings = await res.json();
+
+        if (!listings.length) {
+          grid.innerHTML = '';
+          empty.classList.remove('hidden');
+          return;
+        }
+
+        grid.innerHTML = listings.map((item, i) => `
+          <div class="card-hover rounded-2xl overflow-hidden bg-surface-800/60 border border-white/5 group" style="animation-delay: ${i * 60}ms; animation: slideUp .45s ease-out both ${i * 60}ms;">
+            <div class="h-44 bg-gradient-to-br from-brand-900/40 to-surface-800 flex items-center justify-center relative overflow-hidden">
+              ${item.images && item.images.length
+                ? `<img src="${item.images[0]}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />`
+                : `<svg class="w-12 h-12 text-surface-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`
+              }
+              <span class="absolute top-3 right-3 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${conditionBadgeClass(item.condition)}">
+                ${item.condition.replace('_', ' ')}
+              </span>
+            </div>
+            <div class="p-4">
+              <h3 class="font-semibold text-sm text-white truncate">${escHtml(item.title)}</h3>
+              <p class="text-surface-400 text-xs mt-1 line-clamp-2">${escHtml(item.description || 'No description')}</p>
+              <div class="flex items-center justify-between mt-3">
+                <span class="text-lg font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">₹${Number(item.price).toLocaleString('en-IN')}</span>
+                <span class="text-[10px] text-surface-500">${timeAgo(item.created_at)}</span>
+              </div>
+            </div>
+          </div>
+        `).join('');
+
+      } catch (err) {
+        grid.innerHTML = `<p class="col-span-full text-center text-red-400 py-8">Failed to load listings: ${escHtml(err.message)}</p>`;
+      }
+    };
+
+    // ── Load Asks ───────────────────────────────────────────
+    window.loadAsks = async function() {
+      const grid = $('#asks-grid');
+      const empty = $('#asks-empty');
+      const search = $('#ask-search').value.trim();
+
+      // Show skeletons
+      grid.innerHTML = Array(6).fill('').map(() => `
+        <div class="rounded-2xl p-5 bg-surface-800/60 border border-white/5 space-y-3">
+          <div class="h-4 w-2/3 skeleton"></div>
+          <div class="h-3 w-full skeleton"></div>
+          <div class="h-3 w-1/2 skeleton"></div>
+          <div class="h-8 w-1/3 skeleton mt-2"></div>
+        </div>
+      `).join('');
+      empty.classList.add('hidden');
+
+      try {
+        let url = `${API}/asks?status=open&limit=40&offset=0`;
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const asks = await res.json();
+
+        if (!asks.length) {
+          grid.innerHTML = '';
+          empty.classList.remove('hidden');
+          return;
+        }
+
+        grid.innerHTML = asks.map((ask, i) => `
+          <div class="card-hover rounded-2xl p-5 bg-surface-800/60 border border-white/5 relative" style="animation: slideUp .45s ease-out both ${i * 60}ms;">
+            <div class="flex items-start justify-between mb-3">
+              <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${urgencyBadgeClass(ask.urgency)}">
+                ${ask.urgency} priority
+              </span>
+              <span class="text-[10px] text-surface-500">${timeAgo(ask.created_at)}</span>
+            </div>
+            <h3 class="font-semibold text-sm text-white mb-2">${escHtml(ask.title)}</h3>
+            <p class="text-surface-400 text-xs line-clamp-3 mb-3">${escHtml(ask.description || 'No additional details')}</p>
+            <div class="flex items-center justify-between">
+              ${ask.budget_max !== null && ask.budget_max !== undefined
+                ? `<span class="text-sm font-bold text-amber-400">Budget: ₹${Number(ask.budget_max).toLocaleString('en-IN')}</span>`
+                : `<span class="text-xs text-surface-500 italic">No budget limit</span>`
+              }
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-400">${ask.status}</span>
+            </div>
+          </div>
+        `).join('');
+
+      } catch (err) {
+        grid.innerHTML = `<p class="col-span-full text-center text-red-400 py-8">Failed to load requests: ${escHtml(err.message)}</p>`;
+      }
+    };
+
+    // ── Create Listing ──────────────────────────────────────
+    window.handleCreateListing = async function(e) {
+      e.preventDefault();
+      const btn = $('#cl-submit-btn');
+      btn.disabled = true;
+      btn.textContent = 'Publishing...';
+
+      const body = {
+        category_id: $('#cl-category').value,
+        title:       $('#cl-title').value.trim(),
+        description: $('#cl-description').value.trim(),
+        price:       parseFloat($('#cl-price').value),
+        condition:   $('#cl-condition').value,
+        images:      [],
+      };
+
+      try {
+        const res = await fetch(`${API}/listings`, {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify(body),
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || `Failed (${res.status})`);
+        }
+
+        toast('Listing published! 🎉', 'success');
+        $('#form-create-listing').reset();
+        navigate('dashboard');
+      } catch (err) {
+        toast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Publish Listing';
+      }
+    };
+
+    // ── Create Ask ──────────────────────────────────────────
+    window.handleCreateAsk = async function(e) {
+      e.preventDefault();
+      const btn = $('#ca-submit-btn');
+      btn.disabled = true;
+      btn.textContent = 'Publishing...';
+
+      const body = {
+        category_id: $('#ca-category').value,
+        title:       $('#ca-title').value.trim(),
+        description: $('#ca-description').value.trim(),
+        urgency:     $('#ca-urgency').value,
+      };
+      const budget = $('#ca-budget').value;
+      if (budget !== '') body.budget_max = parseFloat(budget);
+
+      try {
+        const res = await fetch(`${API}/asks`, {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify(body),
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || `Failed (${res.status})`);
+        }
+
+        toast('Request posted! 🎯', 'success');
+        $('#form-create-ask').reset();
+        navigate('asks');
+      } catch (err) {
+        toast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Publish Request';
+      }
+    };
+
+    // ── Utility: condition badge colour ─────────────────────
+    function conditionBadgeClass(c) {
+      const map = {
+        'new':      'bg-emerald-500/20 text-emerald-300',
+        'like_new': 'bg-cyan-500/20 text-cyan-300',
+        'good':     'bg-blue-500/20 text-blue-300',
+        'fair':     'bg-amber-500/20 text-amber-300',
+        'poor':     'bg-red-500/20 text-red-300',
+      };
+      return map[c] || 'bg-surface-700 text-surface-300';
+    }
+
+    // ── Utility: urgency badge colour ───────────────────────
+    function urgencyBadgeClass(u) {
+      const map = {
+        'low':    'bg-green-500/15 text-green-400',
+        'medium': 'bg-amber-500/15 text-amber-400',
+        'high':   'bg-red-500/15 text-red-400 urgency-high',
+      };
+      return map[u] || 'bg-surface-700 text-surface-300';
+    }
+
+    // ── Utility: relative time ──────────────────────────────
+    function timeAgo(dateStr) {
+      const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
+      if (diff < 60)    return 'Just now';
+      if (diff < 3600)  return `${Math.floor(diff/60)}m ago`;
+      if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+      if (diff < 604800)return `${Math.floor(diff/86400)}d ago`;
+      return new Date(dateStr).toLocaleDateString();
+    }
+
+    // ── Utility: escape HTML ────────────────────────────────
+    function escHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str ?? '';
+      return div.innerHTML;
+    }
+
+    // ── Boot ────────────────────────────────────────────────
+    function init() {
+      updateNavState();
+      switchAuthTab('login');
+      if (getToken()) {
+        navigate('dashboard');
+      } else {
+        navigate('auth');
+      }
+    }
+
+    // Wait for DOM
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  })();
+  </script>
+</body>
+</html>
