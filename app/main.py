@@ -41,6 +41,12 @@ app.include_router(health_router)
 from app.api.routers.auth import router as auth_router
 app.include_router(auth_router)
 
+from app.api.routers.listings import router as listings_router
+app.include_router(listings_router)
+
+from app.api.routers.asks import router as asks_router
+app.include_router(asks_router)
+
 # ── Root Endpoint ──────────────────────────────────────────────
 
 @app.get("/", tags=["Root"])
