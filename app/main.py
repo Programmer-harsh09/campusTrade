@@ -47,6 +47,9 @@ app.include_router(listings_router)
 from app.api.routers.asks import router as asks_router
 app.include_router(asks_router)
 
+from app.api.routers.media import router as media_router
+app.include_router(media_router)
+
 # ── Root Endpoint ──────────────────────────────────────────────
 
 @app.get("/", tags=["Root"])
